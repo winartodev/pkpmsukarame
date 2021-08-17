@@ -1,0 +1,231 @@
+{% extends 'main-template.html' %} {% block content %}
+<!-- Jumbotron -->
+<section class="jumbotron text-center">
+  <h1 class="display-4 fw-bold">
+    Praktik Kerja Pengabdian Masyarakat <br />
+    Kelurahan Sukarame
+  </h1>
+</section>
+<!-- End Jumbotron -->
+
+<!-- Data Kasus COVID-->
+<div id="data-kasus">
+  <div class="container">
+    <div class="content pt-4 pb-4">
+      <h1 class="text-center">Data Kasus COVID-19</h1>
+      <p class="text-center">Update Data per tanggal {{ result["tanggal"] }}</p>
+      <!-- Row Data-->
+      <div class="row">
+        <!-- Data Covid Indo -->
+        <div class="col">
+          <div class="card mb-4">
+            <div class="card-header text-center">Data Covid Di Indonesia</div>
+            <div class="card-body">
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <th scope="row">Jumlah Sembuh</th>
+                    <td>{{result["indonesia"]["total"]["jumlah_sembuh"]}}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Jumlah Dirawat</th>
+                    <td>{{result["indonesia"]["total"]["jumlah_dirawat"]}}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Jumlah Meninggal</th>
+                    <td>{{result["indonesia"]["total"]["jumlah_meninggal"]}}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Jumlah Kasus</th>
+                    <td>{{result["indonesia"]["total"]["jumlah_positif"]}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <span class="container">
+              <p>Sumber data berasal dari API <a href="https://data.covid19.go.id/public/api/update.json" target="_blank">data.covid19.go.id</a></p>
+            </span>
+          </div>
+        </div>
+        <!-- End Data COVID Indo -->
+
+        <!-- Data Covid Lampung -->
+        <div class="col">
+          <div class="card mb-4">
+            <div class="card-header text-center">Data Covid Di Lampung</div>
+            <div class="card-body">
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <th scope="row">Jumlah Sembuh</th>
+                    <td>{{result["provinsi"]["lampung"]["jumlah_sembuh"]}}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Jumlah Dirawat</th>
+                    <td>{{result["provinsi"]["lampung"]["jumlah_dirawat"]}}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Jumlah Meninggal</th>
+                    <td>{{result["provinsi"]["lampung"]["jumlah_meninggal"]}}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Jumlah Kasus</th>
+                    <td>{{result["provinsi"]["lampung"]["jumlah_kasus"]}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <span class="container">
+              <p>Sumber data berasal dari API <a href="https://data.covid19.go.id/public/api/prov.json" target="_blank">data.covid19.go.id</a></p>
+            </span>
+          </div>
+        </div>
+        <!-- End Data Covid Lampung -->
+      </div>
+      <!-- End Row Data -->
+    </div>
+  </div>
+</div>
+<!-- End Data Kasus COVID-->
+
+<!-- Info Rumah Sakit -->
+<div id="data-rumah-sakit">
+  <div class="container">
+    <div class="content pt-4 pb-4">
+      <h1 class="text-center">Data Rumah Sakit</h1>
+    </div>
+    <div class="row mb-4">
+      <div class="col col-md-6 offset-md-4">
+        <!-- Form -->
+        <form action="/rumahsakit" method="POST" class="row g-3">
+          <div class="col-auto">
+            <select class="form-select" aria-label="Default select example" name="city">
+              <option selected>Pilih Lokasi</option>
+              {% for city in cities["cities"]: %}
+              <option value="{{ city['id'] }}">{{ city["name"] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-auto">
+            <select class="form-select" aria-label="Default select example" name="tempatTidur">
+              <option selected>Pilih Tempat Tidur</option>
+              <option value="1">Covid 19</option>
+              <option value="2">Non Covid 19</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary mb-3">Cari</button>
+          </div>
+        </form>
+        <!-- End Form -->
+      </div>
+      {% with messages = get_flashed_messages() %} {% if messages %}
+      <span class="flashes">
+        {% for message in messages %}
+        <p class="text-center">{{ message }}</p>
+        {% endfor %}
+      </span>
+      {% endif %} {% endwith %}
+      <!-- <p class="text-center">Kota Bandar Lampung Ditemukan 8 Rumah Sakit</p> -->
+    </div>
+    <div class="row mb-4">
+      <div class="col">
+        <table id="table-rs" class="table table-bordered align-middle table-responsive">
+          <caption>
+            <p>Sumber data berasal dari API <a href="https://rs-bed-covid-api.vercel.app/api/" target="_blank">rs-bed-covid-api.vercel.app</a></p>
+          </caption>
+          <thead>
+            <tr class="text-center">
+              <th>No</th>
+              <th>Nama</th>
+              <th>Alamat</th>
+              <th>Ketersediaan Tempat Tidur</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for hospital in hospitals["hospitals"]: %}
+            <tr class="text-center">
+              <th>{{ loop.index }}</th>
+
+              <td>{{hospital["name"]}}</td>
+              <td>{{hospital["address"]}}</td>
+              <td>
+                {% if hospital['bed_availability'] != 0: %} Tersedia <span class="fw-bold">{{hospital['bed_availability']}}</span> bed kosong IGD {% else:%}
+                <span class="text-danger">Bed IGD Penuh</span>
+                {% endif %}
+              </td>
+              <td>
+                <a type="button" class="btn btn-warning" href="rumahsakit/{{bedType}}/{{hospital['id']}}">Info</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Info Rumah Sakit -->
+
+<!-- Informasi Covid -->
+<div id="informasi-covid">
+  <div class="container">
+    <div class="content pt-4 pb-4 text-center">
+      <h1 class="">Pencegahan COVID-19</h1>
+      <h5 class="mt-4" style="color: red">Ingat Tetap 5M !!!</h5>
+    </div>
+    <div class="row mb-4">
+      <div class="col text-center">
+        <img src="{{url_for('static', filename='img/cuci tangan.png')}}" />
+        <h4 class="mt-2">Mencuci Tangan</h4>
+      </div>
+      <div class="col text-center">
+        <img src="{{url_for('static', filename='img/pakai masker.png')}}" />
+        <h4 class="mt-2">Menggunakan Masker</h4>
+      </div>
+      <div class="col text-center">
+        <img src="{{url_for('static', filename='img/jauhi kerumunan.png')}}" />
+        <h4 class="mt-2">Menjauhi Kerumunan</h4>
+      </div>
+      <div class="col text-center">
+        <img src="{{url_for('static', filename='img/jaga jarak.png')}}" />
+        <h4 class="mt-2">Menjaga Jarak</h4>
+      </div>
+      <div class="col text-center">
+        <img src="{{url_for('static', filename='img/kurangi mobilitas.png')}}" />
+        <h4 class="mt-2">Mengurangi Mobilitas</h4>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Informasi Covid -->
+
+<!-- About Me -->
+<div id="about">
+  <div class="container">
+    <div class="content pt-4 pb-4">
+      <h1 class="">About Me</h1>
+    </div>
+    <div class="row pb-4">
+      <div class="col-4">
+        <img src="{{url_for('static', filename='img/me.jpg')}}" style="width: 300px; height: auto" class="rounded" />
+      </div>
+      <div class="col-8 text-justify">
+        <h3 class="mt-2">Winarto 1811010008</h3>
+        <p class="fs-5 mt-2">
+          Halo nama saya winarto saya adalah mahasiswa teknik informatika, saat ini saya mengambil matakuliah PKPM, PKPM adalah salah satu kegiatan yang diselenggarakan oleh Insitut Informatika dan Bisnis Darmajaya, PKPM kali ini bertempat
+          di keluarahan sukarame kota Bandar Lampung.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End About Me -->
+<script>
+  $(document).ready(function () {
+    $('#table-rs').DataTable();
+  });
+</script>
+
+{% endblock %}
